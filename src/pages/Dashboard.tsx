@@ -3,7 +3,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { WelcomeSection } from "@/components/dashboard/WelcomeSection";
 import { WallOfFameSection } from "@/components/dashboard/WallOfFameSection";
-import { WallOfFameSectionFast } from "@/components/dashboard/WallOfFameSectionFast";
 import { UpcomingSection } from "@/components/dashboard/UpcomingSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -58,7 +57,7 @@ const Dashboard = () => {
   return (
     <AppLayout>
       <WelcomeSection />
-      <WallOfFameSectionFast />
+      <WallOfFameSection />
       <UpcomingSection />
     </AppLayout>
   );

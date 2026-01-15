@@ -43,22 +43,81 @@ export function AppLayout({ children, showHeader = false, HeaderComponent }: App
     if (!user) return;
     
     try {
-      // Use simple query to avoid complex join issues
-      const { data: profileData, error: profileError } = await supabase
+      // Use maybeSingle instead of single to handle missing profiles gracefully
+      let { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError);
-        setProfile(null);
-        return;
+      // Handle RLS errors (406) or missing profiles
+      if (profileError || !profileData) {
+        console.log('Profile not found or RLS blocking, attempting to create profile...');
+        
+        // Try to create a basic profile
+        const { error: createError } = await supabase
+          .from('profiles')
+          .upsert({
+            user_id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            email: user.email || '',
+            role: 'student',
+            points: 0,
+            rank: 'bronze'
+          }, {
+            onConflict: 'user_id'
+          });
+        
+        if (createError) {
+          console.error('Error creating profile:', createError);
+          // Set a minimal profile object to prevent infinite loading
+          setProfile({
+            user_id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            email: user.email || '',
+            role: 'student',
+            points: 0,
+            rank: 'bronze'
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // Retry fetching after creation
+        const { data: newProfile, error: retryError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (!retryError && newProfile) {
+          profileData = newProfile;
+        } else {
+          // Fallback to minimal profile if retry fails
+          setProfile({
+            user_id: user.id,
+            full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+            email: user.email || '',
+            role: 'student',
+            points: 0,
+            rank: 'bronze'
+          });
+          setLoading(false);
+          return;
+        }
       }
 
       // If user has no class_id, set profile without class data
-      if (!profileData.class_id) {
-        setProfile(profileData);
+      if (!profileData || !profileData.class_id) {
+        setProfile(profileData || {
+          user_id: user.id,
+          full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
+          email: user.email || '',
+          role: 'student',
+          points: 0,
+          rank: 'bronze'
+        });
+        setLoading(false);
         return;
       }
 

@@ -59,7 +59,7 @@ export function WallOfFameSection() {
           .from('profiles')
           .select('class_id')
           .eq('user_id', user?.id)
-          .single();
+          .maybeSingle();
 
         if (profileError || !userProfile?.class_id) {
           console.log('No class found, switching to global view');
