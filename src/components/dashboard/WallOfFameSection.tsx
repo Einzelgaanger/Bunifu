@@ -67,83 +67,94 @@ export function WallOfFameSection() {
           return;
         }
 
-        // Get users from the same class
+        // Get users from the same class (use simple query to avoid foreign key issues)
         const { data: classUsers, error: classError } = await supabase
           .from('profiles')
-          .select(`
-            *,
-            classes!inner(
-              course_name,
-              course_year,
-              semester,
-              universities!inner(
-                name,
-                countries!inner(name)
-              )
-            )
-          `)
+          .select('*')
           .eq('class_id', userProfile.class_id)
           .order('points', { ascending: false })
           .limit(30);
 
         if (classError) {
-          console.warn('Class query failed, trying simplified approach:', classError);
-          
-          // Fallback to simple class query
-          const { data: simpleUsers, error: simpleError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('class_id', userProfile.class_id)
-            .order('points', { ascending: false })
-            .limit(30);
+          console.error('Class query failed:', classError);
+          setViewMode('global');
+          return;
+        }
 
-          if (simpleError) {
-            console.error('Simple class query also failed:', simpleError);
-            setViewMode('global');
-            return;
+        // Fetch class data separately for all users
+        if (classUsers && classUsers.length > 0) {
+          try {
+            const { data: classData } = await supabase
+              .from('classes')
+              .select(`
+                course_name,
+                course_year,
+                semester,
+                universities(
+                  name,
+                  countries(name)
+                )
+              `)
+              .eq('id', userProfile.class_id)
+              .maybeSingle();
+
+            const usersWithClass = (classUsers || []).map(user => ({
+              ...user,
+              classes: classData
+            }));
+
+            setTopUsers(usersWithClass);
+          } catch (error) {
+            console.warn('Error fetching class data, using users without class info:', error);
+            setTopUsers(classUsers || []);
           }
-
-          setTopUsers(simpleUsers || []);
         } else {
-          setTopUsers(classUsers || []);
+          setTopUsers([]);
         }
       } else {
-        // Global mode - get all users
+        // Global mode - get all users (use simple query to avoid foreign key issues)
         const { data: globalUsers, error: globalError } = await supabase
           .from('profiles')
-          .select(`
-            *,
-            classes(
-              course_name,
-              course_year,
-              semester,
-              universities(
-                name,
-                countries(name)
-              )
-            )
-          `)
+          .select('*')
           .order('points', { ascending: false })
           .limit(30);
 
         if (globalError) {
-          console.warn('Global query failed, trying simple approach:', globalError);
-          
-          // Fallback to simple global query
-          const { data: simpleUsers, error: simpleError } = await supabase
-            .from('profiles')
-            .select('*')
-            .order('points', { ascending: false })
-            .limit(30);
-
-          if (simpleError) {
-            console.error('Simple global query also failed:', simpleError);
-            setTopUsers([]);
-          } else {
-            setTopUsers(simpleUsers || []);
-          }
+          console.error('Global query failed:', globalError);
+          setTopUsers([]);
         } else {
-          setTopUsers(globalUsers || []);
+          // If users have class_id, fetch class data separately
+          const usersWithClasses = await Promise.all(
+            (globalUsers || []).map(async (user) => {
+              if (!user.class_id) return user;
+              
+              try {
+                const { data: classData } = await supabase
+                  .from('classes')
+                  .select(`
+                    course_name,
+                    course_year,
+                    semester,
+                    universities(
+                      name,
+                      countries(name)
+                    )
+                  `)
+                  .eq('id', user.class_id)
+                  .maybeSingle();
+                
+                return {
+                  ...user,
+                  classes: classData
+                };
+              } catch (error) {
+                console.warn('Error fetching class data for user:', error);
+                return user;
+              }
+            })
+          );
+          
+          setTopUsers(usersWithClasses);
         }
       }
     } catch (error) {
