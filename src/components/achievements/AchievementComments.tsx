@@ -146,6 +146,8 @@ export function AchievementComments({
     }
   };
 
+  const db = supabase as any;
+
   const fetchComments = async () => {
     // Prevent multiple simultaneous fetches
     if (isFetching) {
@@ -163,9 +165,9 @@ export function AchievementComments({
     try {
       setIsFetching(true);
       setLoading(true);
-      
-      // Fetch comments and profiles separately to avoid foreign key issues
-      const { data: commentsData, error: commentsError } = await supabase
+
+      // NOTE: db is intentionally `any` to avoid TS "excessively deep" inference issues
+      const { data: commentsData, error: commentsError } = await db
         .from('achievement_comments')
         .select('*')
         .eq('achievement_id', achievementId)
@@ -180,10 +182,10 @@ export function AchievementComments({
       }
 
       // Get unique user IDs
-      const userIds = [...new Set(commentsData.map(comment => comment.user_id))];
-      
+      const userIds = [...new Set(commentsData.map((comment: any) => comment.user_id))];
+
       // Fetch profiles for all users
-      const { data: profilesData, error: profilesError } = await supabase
+      const { data: profilesData, error: profilesError } = await db
         .from('profiles')
         .select('user_id, full_name, profile_picture_url')
         .in('user_id', userIds);
@@ -191,8 +193,8 @@ export function AchievementComments({
       if (profilesError) throw profilesError;
 
       // Combine data
-      const transformedData = commentsData.map(comment => {
-        const profile = profilesData?.find(p => p.user_id === comment.user_id);
+      const transformedData = commentsData.map((comment: any) => {
+        const profile = profilesData?.find((p: any) => p.user_id === comment.user_id);
         return {
           id: comment.id,
           achievement_id: comment.achievement_id,
@@ -204,7 +206,7 @@ export function AchievementComments({
           author_picture: profile?.profile_picture_url
         };
       });
-      
+
       setComments(transformedData);
       setHasMoreComments(transformedData.length >= (limit || 100));
     } catch (error) {
@@ -241,10 +243,10 @@ export function AchievementComments({
 
     const commentText = newComment.trim();
     setIsSubmitting(true);
-    
+
     // Check for duplicate comments
-    const isDuplicate = comments.some(comment => 
-      comment.content === commentText && 
+    const isDuplicate = comments.some(comment =>
+      comment.content === commentText &&
       comment.user_id === user.id &&
       Date.now() - new Date(comment.created_at).getTime() < 5000 // Within 5 seconds
     );
@@ -264,7 +266,7 @@ export function AchievementComments({
 
     try {
       // Insert comment to database first
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('achievement_comments')
         .insert({
           achievement_id: achievementId,
@@ -277,7 +279,7 @@ export function AchievementComments({
       if (error) throw error;
 
       // Fetch user profile separately
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await db
         .from('profiles')
         .select('full_name, profile_picture_url')
         .eq('user_id', user.id)
@@ -308,19 +310,17 @@ export function AchievementComments({
         }
         return [...prev, newCommentData];
       });
-      
+
       // Set states immediately
       setNewlyAddedCommentId(data.id);
       setJustAddedComment(true);
       setLastCommentTime(Date.now());
       onCommentAdded?.();
-      
+
       // Force a re-render to ensure the comment is visible
       setTimeout(() => {
         setComments(prev => [...prev]);
       }, 10);
-
-      // No need to scroll - newest comments appear at the top automatically
 
       // Remove highlight after 3 seconds
       setTimeout(() => {
@@ -334,10 +334,10 @@ export function AchievementComments({
 
     } catch (error) {
       console.error('Error submitting comment:', error);
-      
+
       // Restore the comment text on error
       setNewComment(commentText);
-      
+
       toast({
         title: "Error",
         description: "Failed to add comment.",
@@ -359,9 +359,9 @@ export function AchievementComments({
     }
 
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('achievement_comments')
-        .update({ 
+        .update({
           content: editContent.trim(),
           updated_at: new Date().toISOString()
         })
@@ -369,8 +369,8 @@ export function AchievementComments({
 
       if (error) throw error;
 
-      setComments(prev => prev.map(comment => 
-        comment.id === commentId 
+      setComments(prev => prev.map(comment =>
+        comment.id === commentId
           ? { ...comment, content: editContent.trim(), updated_at: new Date().toISOString() }
           : comment
       ));
@@ -391,7 +391,7 @@ export function AchievementComments({
     if (!confirm('Are you sure you want to delete this comment?')) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('achievement_comments')
         .delete()
         .eq('id', commentId);
@@ -412,7 +412,7 @@ export function AchievementComments({
   const startEditing = (comment: Comment) => {
     setEditingComment(comment.id);
     setEditContent(comment.content);
-    
+
     // Auto-resize edit textarea after a short delay
     setTimeout(() => {
       if (editTextareaRef.current) {
@@ -429,10 +429,13 @@ export function AchievementComments({
   const handleCommentLike = async (commentId: string) => {
     if (!user) return;
 
+    const currentLike = commentLikes[commentId];
+
     try {
-      const currentLike = commentLikes[commentId];
       const isLiked = currentLike?.liked || false;
-      const newCount = isLiked ? (currentLike?.count || 1) - 1 : (currentLike?.count || 0) + 1;
+      const newCount = isLiked
+        ? (currentLike?.count || 1) - 1
+        : (currentLike?.count || 0) + 1;
 
       // Optimistic update
       setCommentLikes(prev => ({
