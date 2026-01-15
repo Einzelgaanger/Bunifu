@@ -38,18 +38,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Google auth error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to authenticate with Google.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-white relative overflow-hidden">
