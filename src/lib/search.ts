@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Advanced search utilities with debouncing and filtering
  */

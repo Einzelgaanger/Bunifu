@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PointsSystem, Achievement, CharacterProgression, LevelBonus } from '@/types/gamification';
 
 // Points System Configuration

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 

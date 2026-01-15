@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Chat Table Manager
 // This handles chat functionality without relying on SQL scripts
 

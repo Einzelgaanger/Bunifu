@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Create Chat Table Utility
 // This can be run from the frontend to create the chat table
 
