@@ -8,44 +8,27 @@ interface CustomOAuthProviderProps {
 export const CustomOAuthProvider: React.FC<CustomOAuthProviderProps> = ({ children }) => {
   const handleGoogleAuth = async () => {
     try {
-      // Custom OAuth configuration with Bunifu branding
+      // Normal Google OAuth flow (no domain restriction)
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-            hd: 'bunifu.world', // Custom domain hint
-            login_hint: 'bunifu.world' // Additional domain hint
+            // Ensures the account chooser is shown
+            prompt: "select_account",
           },
-          scopes: 'openid email profile',
-          // Custom branding parameters
-          customParameters: {
-            'hd': 'bunifu.world',
-            'prompt': 'consent',
-            'access_type': 'offline'
-          }
-        }
+          scopes: "openid email profile",
+        },
       });
-      
+
       if (error) throw error;
     } catch (error: any) {
-      console.error('Custom OAuth error:', error);
+      console.error("Custom OAuth error:", error);
       throw error;
     }
   };
 
-  return (
-    <div className="custom-oauth-provider">
-      {children}
-      <style jsx>{`
-        .custom-oauth-provider {
-          /* Custom styling for OAuth flow */
-        }
-      `}</style>
-    </div>
-  );
+  return <div className="custom-oauth-provider">{children}</div>;
 };
 
 export default CustomOAuthProvider;

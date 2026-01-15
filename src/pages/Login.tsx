@@ -20,13 +20,24 @@ const Login = () => {
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-            hd: 'bunifu.world' // Custom domain hint
+            // Normal Google account chooser (do NOT restrict to @bunifu.world)
+            prompt: 'select_account'
           },
           scopes: 'openid email profile'
         }
       });
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Google auth error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to authenticate with Google.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
       if (error) throw error;
     } catch (error: any) {
       console.error('Google auth error:', error);

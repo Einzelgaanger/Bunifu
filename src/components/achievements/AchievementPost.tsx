@@ -80,6 +80,8 @@ export function AchievementPost({
 }: AchievementPostProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const db = supabase as any;
+
   const [isLiked, setIsLiked] = useState(achievement.user_liked);
   const [isDisliked, setIsDisliked] = useState(achievement.user_disliked || false);
   const [likesCount, setLikesCount] = useState(achievement.likes_count);
@@ -98,14 +100,14 @@ export function AchievementPost({
 
   const fetchMedia = async () => {
     try {
-      // Use direct query for now (RPC functions will be available after SQL script is run)
+      // NOTE: db is intentionally `any` to avoid TS "excessively deep" inference issues
       console.log('Using direct query for achievement media');
-      const directResult = await supabase
+      const directResult = await db
         .from('achievement_media')
         .select('*')
         .eq('achievement_id', achievement.id)
         .order('order_index', { ascending: true });
-      
+
       const data = directResult.data;
       const error = directResult.error;
 
@@ -118,7 +120,7 @@ export function AchievementPost({
 
   const recordView = async () => {
     try {
-      await supabase
+      await db
         .from('achievement_views')
         .insert({
           achievement_id: achievement.id,
@@ -143,10 +145,10 @@ export function AchievementPost({
     // Optimistic update - update UI immediately for instant response
     const wasLiked = isLiked;
     const wasDisliked = isDisliked;
-    
+
     setIsLiked(!wasLiked);
     setLikesCount(prev => wasLiked ? Math.max(0, prev - 1) : prev + 1);
-    
+
     // If liking, remove dislike
     if (!wasLiked && wasDisliked) {
       setIsDisliked(false);
@@ -156,7 +158,7 @@ export function AchievementPost({
     try {
       if (wasLiked) {
         // Unlike - remove the like
-        const { error } = await supabase
+        const { error } = await db
           .from('achievement_likes')
           .delete()
           .eq('achievement_id', achievement.id)
@@ -165,13 +167,13 @@ export function AchievementPost({
         if (error) throw error;
       } else {
         // Like - first remove any existing like, then add new one
-        await supabase
+        await db
           .from('achievement_likes')
           .delete()
           .eq('achievement_id', achievement.id)
           .eq('user_id', user.id);
 
-        const { error } = await supabase
+        const { error } = await db
           .from('achievement_likes')
           .insert({
             achievement_id: achievement.id,
@@ -182,7 +184,7 @@ export function AchievementPost({
 
         // Remove dislike if it existed
         if (wasDisliked) {
-          await supabase
+          await db
             .from('achievement_dislikes')
             .delete()
             .eq('achievement_id', achievement.id)
@@ -219,10 +221,10 @@ export function AchievementPost({
     // Optimistic update - update UI immediately for instant response
     const wasDisliked = isDisliked;
     const wasLiked = isLiked;
-    
+
     setIsDisliked(!wasDisliked);
     setDislikesCount(prev => wasDisliked ? Math.max(0, prev - 1) : prev + 1);
-    
+
     // If disliking, remove like
     if (!wasDisliked && wasLiked) {
       setIsLiked(false);
@@ -232,7 +234,7 @@ export function AchievementPost({
     try {
       if (wasDisliked) {
         // Remove dislike
-        const { error } = await supabase
+        const { error } = await db
           .from('achievement_dislikes')
           .delete()
           .eq('achievement_id', achievement.id)
@@ -241,7 +243,7 @@ export function AchievementPost({
         if (error) throw error;
       } else {
         // Add dislike and remove like if exists
-        const { error: dislikeError } = await supabase
+        const { error: dislikeError } = await db
           .from('achievement_dislikes')
           .upsert({
             achievement_id: achievement.id,
@@ -252,7 +254,7 @@ export function AchievementPost({
 
         // Remove like if it existed
         if (wasLiked) {
-          await supabase
+          await db
             .from('achievement_likes')
             .delete()
             .eq('achievement_id', achievement.id)
@@ -280,7 +282,7 @@ export function AchievementPost({
     if (!confirm('Are you sure you want to delete this achievement?')) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await db
         .from('achievements')
         .delete()
         .eq('id', achievement.id);
