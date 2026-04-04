@@ -43,6 +43,7 @@ interface ChatMessage {
   sender_name: string;
   sender_avatar?: string;
   reply_to?: ChatMessage;
+  pending?: boolean;
 }
 
 interface ClassChatroomProps {
@@ -200,26 +201,48 @@ const ClassChatroom = ({ classId, className }: ClassChatroomProps) => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() && !replyTo) return;
+    if (!newMessage.trim() || sending) return;
 
+    const text = newMessage.trim();
+    const replySnapshot = replyTo;
+    const tempId = `optimistic-${Date.now()}`;
+    const senderName =
+      user?.user_metadata?.full_name || user?.email?.split("@")[0] || "You";
+
+    const optimistic: ChatMessage = {
+      id: tempId,
+      class_id: classId,
+      sender_id: user.id,
+      message: text,
+      message_type: "text",
+      created_at: new Date().toISOString(),
+      sender_name: senderName,
+      sender_avatar: user?.user_metadata?.avatar_url,
+      reply_to_id: replySnapshot?.id || null,
+      reply_to: replySnapshot || undefined,
+      pending: true,
+    };
+
+    setMessages((prev) => [...prev, optimistic]);
+    setNewMessage("");
+    setReplyTo(null);
     setSending(true);
+
     try {
-      const { error } = await supabase
-        .from('class_chat_messages')
-        .insert({
-          class_id: classId,
-          sender_id: user?.id,
-          message: newMessage.trim(),
-          message_type: 'text',
-          reply_to_id: replyTo?.id || null
-        });
+      const { error } = await supabase.from("class_chat_messages").insert({
+        class_id: classId,
+        sender_id: user?.id,
+        message: text,
+        message_type: "text",
+        reply_to_id: replySnapshot?.id || null,
+      });
 
       if (error) throw error;
-
-      setNewMessage('');
-      setReplyTo(null);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setNewMessage(text);
+      setReplyTo(replySnapshot);
       toast({
         title: "Error",
         description: "Failed to send message.",
@@ -297,7 +320,7 @@ const ClassChatroom = ({ classId, className }: ClassChatroomProps) => {
     return (
       <div
         key={message.id}
-        className={`flex gap-3 mb-4 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
+        className={`flex gap-3 mb-4 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} ${message.pending ? 'opacity-75' : ''}`}
       >
         <Avatar className="h-8 w-8 flex-shrink-0">
           <AvatarImage src={message.sender_avatar} />

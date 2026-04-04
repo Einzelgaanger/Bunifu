@@ -208,6 +208,7 @@ const JoinClassForm = ({ onSuccess, onCancel }: JoinClassFormProps) => {
       return;
     }
 
+    setRequestStatus({ status: 'pending' });
     setLoading(true);
     try {
       const { error } = await supabase
@@ -222,15 +223,13 @@ const JoinClassForm = ({ onSuccess, onCancel }: JoinClassFormProps) => {
 
       if (error) throw error;
 
-      // Update request status to pending
-      setRequestStatus({ status: 'pending' });
-
       toast({
         title: "Join Request Sent",
         description: "Your request has been sent to the class creator for approval.",
       });
     } catch (error) {
       console.error('Error submitting join request:', error);
+      setRequestStatus({ status: 'none' });
       toast({
         title: "Error",
         description: "Failed to submit join request. Please try again.",

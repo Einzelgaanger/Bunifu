@@ -8,10 +8,14 @@ async function testUploadVisibility() {
     // Import supabase client (adjust path as needed)
     const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2');
     
-    const supabase = createClient(
-      'https://ztxgmqunqsookgpmluyp.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0eGdtcXVucXNvb2tncG1sdXlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczMTAzODQsImV4cCI6MjA3Mjg4NjM4NH0.DK2oySyoBu29Z-uNsrmhX9VtuADqtjwg2OxBj1jXYas'
-    );
+    // Do not commit real keys. Paste VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY from .env
+    const SUPABASE_URL = 'REPLACE_WITH_VITE_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'REPLACE_WITH_VITE_SUPABASE_PUBLISHABLE_KEY';
+    if (SUPABASE_URL.includes('REPLACE') || SUPABASE_ANON_KEY.includes('REPLACE')) {
+      console.error('Set SUPABASE_URL and SUPABASE_ANON_KEY in this script (from your .env), then re-run.');
+      return;
+    }
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Check current user
     const { data: { user }, error: userError } = await supabase.auth.getUser();

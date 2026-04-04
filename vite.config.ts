@@ -97,9 +97,9 @@ export default defineConfig(({ mode }) => ({
           }
         ]
       },
-      // Force update on every build
+      // Dev: SW off avoids Workbox "glob doesn't match" on sparse dev-dist; use `npm run build && npm run preview` to test PWA.
       devOptions: {
-        enabled: true,
+        enabled: false,
         type: 'module'
       }
     }),

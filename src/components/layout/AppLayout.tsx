@@ -5,6 +5,7 @@ import { ClientHeader } from "@/components/layout/ClientHeader";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AppShellSkeleton } from "@/components/ui/page-skeletons";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -153,11 +154,7 @@ export function AppLayout({ children, showHeader = false, HeaderComponent }: App
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <AppShellSkeleton />;
   }
 
   return (

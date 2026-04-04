@@ -11,7 +11,7 @@ import {
   ZoomOut,
   Move
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, supabaseUrlResolved } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -154,8 +154,7 @@ export function ProfilePictureUpload({
       if (uploadError) throw uploadError;
 
       // Construct the public URL manually (since storage.get_public_url might not work)
-      const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ztxgmqunqsookgpmluyp.supabase.co';
-      const publicUrl = `${supabaseUrl}/storage/v1/object/public/profile-pictures/${filePath}`;
+      const publicUrl = `${supabaseUrlResolved}/storage/v1/object/public/profile-pictures/${filePath}`;
 
       // Update profile in database
       const { error: updateError } = await supabase

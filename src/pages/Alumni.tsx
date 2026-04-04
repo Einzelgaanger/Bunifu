@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { FeedPageSkeleton } from "@/components/ui/page-skeletons";
 import { useNavigate } from "react-router-dom";
 
 interface AlumniProfile {
@@ -310,9 +311,7 @@ export default function Alumni() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+        <FeedPageSkeleton />
       </AppLayout>
     );
   }

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getSupabaseAuthStorageKey } from '@/integrations/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setSession(null);
     setUser(null);
     // Clear any stored auth data
-    localStorage.removeItem('sb-ztxgmqunqsookgpmluyp-auth-token');
+    localStorage.removeItem(getSupabaseAuthStorageKey());
     sessionStorage.clear();
   };
 

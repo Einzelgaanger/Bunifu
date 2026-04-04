@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useApplicationStatus } from '@/hooks/useApplicationStatus';
 import { useToast } from '@/hooks/use-toast';
+import { PageBlockSkeleton } from '@/components/ui/page-skeletons';
 
 interface ApplicationGuardProps {
   children: React.ReactNode;
@@ -41,11 +42,8 @@ const ApplicationGuard = ({ children }: ApplicationGuardProps) => {
   // Show loading while checking application status (only for non-approved users)
   if (loading && status !== 'approved') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Checking application status...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <PageBlockSkeleton />
       </div>
     );
   }

@@ -12,6 +12,8 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import { FloatingConcernsButton } from "@/components/ui/FloatingConcernsButton";
 import { AuthErrorHandler } from "@/components/AuthErrorHandler";
 import { PWAUpdatePrompt } from "@/components/PWAUpdatePrompt";
+import { SeoManager } from "@/components/SeoManager";
+import { AppShellSkeleton } from "@/components/ui/page-skeletons";
 import { usePWAUpdate } from "@/hooks/usePWAUpdate";
 import { initSentry, Sentry } from "@/lib/sentry";
 import { initPerformanceMonitoring } from "@/lib/performance";
@@ -42,12 +44,8 @@ const Masomo = lazy(() => import("./pages/Masomo"));
 const ClassPage = lazy(() => import("./pages/ClassPage"));
 const Admin = lazy(() => import("./pages/Admin"));
 
-// Loading component
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center">
-    <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-  </div>
-);
+// Loading component (lazy route chunks)
+const PageLoader = () => <AppShellSkeleton />;
 
 // Initialize Sentry and Performance Monitoring
 initSentry();
@@ -66,11 +64,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <AppShellSkeleton />;
   }
   
   return user ? <>{children}</> : <Navigate to="/login" replace />;
@@ -105,6 +99,7 @@ const App = () => {
                 v7_relativeSplatPath: true
               }}
             >
+              <SeoManager />
               <ProfileGuard>
                 <Suspense fallback={<PageLoader />}>
                   <Routes>

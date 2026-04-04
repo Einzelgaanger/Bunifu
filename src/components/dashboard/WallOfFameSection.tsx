@@ -7,7 +7,8 @@ import { Trophy, Medal, Award, Building, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { CHARACTERS } from "@/data/characters";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { DashboardCardListSkeleton } from "@/components/ui/page-skeletons";
+import { usePerceivedLoading } from "@/hooks/usePerceivedLoading";
 
 // Helper function to get character by points using new system
 const getCharacterByPoints = (points: number) => {
@@ -30,6 +31,7 @@ export function WallOfFameSection() {
   const { user } = useAuth();
   const [topUsers, setTopUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const showSkeleton = usePerceivedLoading(loading, 180);
   const [viewMode, setViewMode] = useState<'university' | 'global'>('university');
   const [initialLoad, setInitialLoad] = useState(false);
 
@@ -184,7 +186,7 @@ export function WallOfFameSection() {
     return <span className="text-sm font-bold text-muted-foreground">#{index + 1}</span>;
   };
 
-  if (loading) {
+  if (showSkeleton) {
     return (
       <Card>
         <CardHeader>
@@ -194,9 +196,7 @@ export function WallOfFameSection() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <LoadingSpinner />
-          </div>
+          <DashboardCardListSkeleton rows={6} />
         </CardContent>
       </Card>
     );
@@ -250,7 +250,8 @@ export function WallOfFameSection() {
             {topUsers.map((profile, index) => (
               <div
                 key={profile.id}
-                className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
+                className="flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors animate-in fade-in slide-in-from-bottom-1 duration-200"
+                style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
               >
                 <div className="flex items-center gap-2">
                   {getRankIcon(index)}

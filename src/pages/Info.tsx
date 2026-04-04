@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ProfilePageSkeleton } from "@/components/ui/page-skeletons";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { safeSupabaseQuery, handleSupabaseError } from "@/utils/errorHandling";
@@ -274,9 +275,7 @@ const Info = () => {
   if (loading) {
     return (
       <AppLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-        </div>
+        <ProfilePageSkeleton />
       </AppLayout>
     );
   }

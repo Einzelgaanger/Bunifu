@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
 import { getCharacter, getCharacterImage, getCharacterName } from "@/utils/characterUtils";
 import { VideoPlayer } from "@/components/ui/VideoPlayer";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function WelcomeSection() {
   const profile = useProfile();
@@ -112,9 +113,11 @@ export function WelcomeSection() {
               
               <div className="flex items-center gap-2 lg:gap-3">
                 <Flame className="h-5 w-5 lg:h-6 lg:w-6 text-orange-500 flex-shrink-0" />
-                <span className="text-sm lg:text-base font-medium text-orange-600">
-                  {loadingStreak ? "..." : streak}
-                </span>
+                {loadingStreak ? (
+                  <Skeleton className="h-5 w-8 inline-block rounded-md align-middle" shimmer />
+                ) : (
+                  <span className="text-sm lg:text-base font-medium text-orange-600">{streak}</span>
+                )}
                 <span className="text-xs lg:text-sm text-muted-foreground">day streak</span>
               </div>
             </div>

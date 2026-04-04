@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AchievementPost } from "@/components/achievements/AchievementPost";
+import { Skeleton } from "@/components/ui/skeleton";
 import { CreateAchievementForm } from "@/components/achievements/CreateAchievementForm";
 import {
   Dialog,
@@ -409,11 +410,15 @@ export default function Sifa() {
         {/* Achievements Feed */}
         <div className="space-y-6">
           {loading ? (
-            <div className="flex items-center justify-center py-16 sm:py-24">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-4 border-primary/20 border-t-primary"></div>
-                <p className="text-sm text-muted-foreground">Loading achievements...</p>
-              </div>
+            <div className="space-y-4 max-w-3xl mx-auto py-4 animate-in fade-in duration-200">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton
+                  key={i}
+                  className="h-44 sm:h-52 w-full rounded-2xl"
+                  shimmer
+                  style={{ animationDelay: `${i * 60}ms` }}
+                />
+              ))}
             </div>
           ) : filteredAchievements.length === 0 ? (
             <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">

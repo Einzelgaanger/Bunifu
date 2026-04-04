@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { PageBlockSkeleton } from '@/components/ui/page-skeletons';
 
 interface AdminGuardProps {
   children: React.ReactNode;
@@ -87,10 +88,7 @@ const AdminGuard = ({ children, requiredRole = 'admin' }: AdminGuardProps) => {
   if (loading || checkingRole) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Verifying admin access...</p>
-        </div>
+        <PageBlockSkeleton />
       </div>
     );
   }

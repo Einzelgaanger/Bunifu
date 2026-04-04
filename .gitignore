@@ -10,13 +10,22 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+dev-dist
 *.local
 
-# Environment variables
+# Environment variables (never commit secrets)
 .env
-.env.local
-.env.production
-.env.development
+.env.*
+!.env.example
+
+# Certificates and keys
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Local / backup files that should not ship
+*.backup
 
 # Editor directories and files
 .vscode/*
@@ -32,3 +41,4 @@ dist-ssr
 # Build analysis
 stats.html
 bundle-stats.html
+*.tsbuildinfo

@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Calendar, MapPin, Clock, User, Image as ImageIcon, Upload, X, Globe, Building, Users, Edit, Trash2, MoreVertical } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { FeedPageSkeleton } from "@/components/ui/page-skeletons";
 
 interface PublicEvent {
   id: string;
@@ -424,9 +425,7 @@ export default function Events() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+        <FeedPageSkeleton />
       </AppLayout>
     );
   }

@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { InboxPageSkeleton } from "@/components/ui/page-skeletons";
+import { usePerceivedLoading } from "@/hooks/usePerceivedLoading";
 
 interface Conversation {
   participant_id: string;
@@ -46,6 +48,8 @@ interface Message {
     full_name: string;
     profile_picture_url: string;
   };
+  /** Optimistic row while insert is in flight */
+  pending?: boolean;
 }
 
 const Inbox = () => {
@@ -59,6 +63,7 @@ const Inbox = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(conversationId || null);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const showInboxSkeleton = usePerceivedLoading(loading, 200);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -454,29 +459,49 @@ const Inbox = () => {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConversation || !user) return;
+    if (!newMessage.trim() || !selectedConversation || !user || sending) return;
 
+    const text = newMessage.trim();
+    const tempId = `optimistic-${Date.now()}`;
+    const displayName =
+      userProfile?.full_name ||
+      user.user_metadata?.full_name ||
+      user.email?.split("@")[0] ||
+      "You";
+    const avatarUrl =
+      userProfile?.profile_picture_url || user.user_metadata?.avatar_url || "";
+
+    const optimistic = {
+      id: tempId,
+      sender_id: user.id,
+      receiver_id: selectedConversation,
+      content: text,
+      is_read: false,
+      created_at: new Date().toISOString(),
+      profiles: { full_name: displayName, profile_picture_url: avatarUrl },
+      pending: true,
+    };
+
+    setMessages((prev) => [...prev, optimistic]);
+    setNewMessage("");
     setSending(true);
+
     try {
-      const { error } = await supabase
-        .from('direct_messages')
-        .insert({
-          sender_id: user.id,
-          receiver_id: selectedConversation,
-          content: newMessage.trim()
-        });
+      const { error } = await supabase.from("direct_messages").insert({
+        sender_id: user.id,
+        receiver_id: selectedConversation,
+        content: text,
+      });
 
       if (error) throw error;
 
-      setNewMessage("");
       fetchMessages(selectedConversation);
-      fetchConversations(); // Refresh conversations to update last message
-      // Auto-scroll to bottom after sending
-      setTimeout(() => {
-        scrollToBottomContainer();
-      }, 100);
+      fetchConversations();
+      setTimeout(() => scrollToBottomContainer(), 80);
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error("Error sending message:", error);
+      setMessages((prev) => prev.filter((m) => m.id !== tempId));
+      setNewMessage(text);
       toast({
         title: "Error",
         description: "Failed to send message.",
@@ -597,12 +622,10 @@ const Inbox = () => {
 
   const selectedConvData = conversations.find(conv => conv.participant_id === selectedConversation);
 
-  if (loading) {
+  if (showInboxSkeleton) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+        <InboxPageSkeleton />
       </AppLayout>
     );
   }
@@ -783,6 +806,8 @@ const Inbox = () => {
                       <div
                         key={message.id}
                         className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} group hover:bg-slate-50/50 dark:hover:bg-slate-700/50 rounded-md p-1 -m-1 border-l-2 transition-all duration-500 ${
+                          message.pending ? "opacity-75" : ""
+                        } ${
                           message.id.endsWith('1') || message.id.endsWith('3') || message.id.endsWith('5')
                             ? 'border-blue-200 dark:border-blue-800'
                             : message.id.endsWith('2') || message.id.endsWith('4') || message.id.endsWith('6')

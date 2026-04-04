@@ -44,6 +44,8 @@ import { CodeManagement } from "@/components/classes/CodeManagement";
 import { ClassJoinRequestBadge } from "@/components/classes/ClassJoinRequestBadge";
 import { JoinRequestStatus } from "@/components/classes/JoinRequestStatus";
 import { JoinRequestNotification } from "@/components/classes/JoinRequestNotification";
+import { MasomoPageSkeleton } from "@/components/ui/page-skeletons";
+import { usePerceivedLoading } from "@/hooks/usePerceivedLoading";
 
 interface UserClass {
   id: string;
@@ -388,14 +390,10 @@ const Masomo = () => {
   // Debug logging
   console.log('Masomo render:', { user, loading, userClasses: userClasses.length, joinRequests: joinRequests.length });
 
-  if (loading) {
+  if (showPageSkeleton) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          <p className="text-sm text-gray-500 mt-4">Loading Masomo...</p>
-          <p className="text-xs text-gray-400 mt-2">User: {user ? 'Authenticated' : 'Not authenticated'}</p>
-        </div>
+        <MasomoPageSkeleton />
       </AppLayout>
     );
   }

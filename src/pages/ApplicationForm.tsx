@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowRight, ArrowLeft, User, Hash, CheckCircle } from "lucide-react";
 import Logo from "@/components/ui/Logo";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ClassDetails {
   id: string;
@@ -288,10 +289,11 @@ const ApplicationForm = () => {
 
   if (!classDetails) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading class details...</p>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-white">
+        <div className="w-full max-w-md space-y-4 animate-in fade-in duration-200">
+          <Skeleton className="h-12 w-full rounded-xl" shimmer />
+          <Skeleton className="h-4 w-3/4 rounded-md" shimmer />
+          <Skeleton className="h-32 w-full rounded-xl" shimmer />
         </div>
       </div>
     );

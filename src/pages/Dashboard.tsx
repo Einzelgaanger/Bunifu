@@ -6,6 +6,7 @@ import { WallOfFameSection } from "@/components/dashboard/WallOfFameSection";
 import { UpcomingSection } from "@/components/dashboard/UpcomingSection";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ProgressiveReveal } from "@/components/ui/ProgressiveReveal";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -56,9 +57,17 @@ const Dashboard = () => {
 
   return (
     <AppLayout>
-      <WelcomeSection />
-      <WallOfFameSection />
-      <UpcomingSection />
+      <div className="space-y-6 lg:space-y-8">
+        <ProgressiveReveal staggerIndex={0}>
+          <WelcomeSection />
+        </ProgressiveReveal>
+        <ProgressiveReveal staggerIndex={1}>
+          <WallOfFameSection />
+        </ProgressiveReveal>
+        <ProgressiveReveal staggerIndex={2}>
+          <UpcomingSection />
+        </ProgressiveReveal>
+      </div>
     </AppLayout>
   );
 };

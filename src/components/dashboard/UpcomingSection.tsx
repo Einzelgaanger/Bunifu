@@ -7,11 +7,14 @@ import { Calendar, Clock, FileText, Building, Globe } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { formatDistanceToNow, isAfter, startOfDay } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePerceivedLoading } from "@/hooks/usePerceivedLoading";
 
 export function UpcomingSection() {
   const { user } = useAuth();
   const [upcoming, setUpcoming] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const showSkeleton = usePerceivedLoading(loading, 180);
   const [viewMode, setViewMode] = useState<'university' | 'global'>('university');
 
   useEffect(() => {
@@ -212,7 +215,7 @@ export function UpcomingSection() {
     return formatDistanceToNow(itemDate, { addSuffix: true });
   };
 
-  if (loading) {
+  if (showSkeleton) {
     return (
       <Card>
         <CardHeader>
@@ -221,10 +224,14 @@ export function UpcomingSection() {
             Upcoming
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center h-32">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div>
+        <CardContent className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="p-3 rounded-lg border space-y-2">
+              <Skeleton className="h-4 w-3/4 max-w-xs rounded-md" shimmer />
+              <Skeleton className="h-3 w-full max-w-sm rounded-md" shimmer />
+              <Skeleton className="h-3 w-24 rounded-md" shimmer />
+            </div>
+          ))}
         </CardContent>
       </Card>
     );
@@ -271,7 +278,8 @@ export function UpcomingSection() {
             {upcoming.map((item, index) => (
               <div
                 key={index}
-                className={`p-3 rounded-lg border ${getItemColor(item)} transition-colors hover:shadow-sm`}
+                className={`p-3 rounded-lg border ${getItemColor(item)} transition-colors hover:shadow-sm animate-in fade-in slide-in-from-bottom-1 duration-200`}
+                style={{ animationDelay: `${Math.min(index * 35, 350)}ms` }}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex-shrink-0 mt-0.5">

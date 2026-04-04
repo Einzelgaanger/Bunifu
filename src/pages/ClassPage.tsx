@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { retryRequest, testSupabaseConnection } from "@/utils/networkUtils";
 import { ChatTableManager } from "@/utils/chatTableManager";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { MasomoPageSkeleton } from "@/components/ui/page-skeletons";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -364,9 +365,7 @@ export default function ClassPage() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+        <MasomoPageSkeleton />
       </AppLayout>
     );
   }

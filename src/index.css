@@ -352,3 +352,24 @@ input:focus-visible {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Skeleton shimmer — reads as “loading fast” vs a static pulse */
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    110deg,
+    hsl(var(--muted)) 0%,
+    hsl(var(--muted) / 0.55) 40%,
+    hsl(var(--muted)) 80%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.15s ease-in-out infinite;
+}

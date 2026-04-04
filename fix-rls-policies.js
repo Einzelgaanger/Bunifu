@@ -2,14 +2,17 @@
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 
-// Read environment variables or use your Supabase credentials
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://ztxgmqunqsookgpmluyp.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // You'll need the service role key for admin operations
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+if (!supabaseUrl) {
+  console.error('❌ VITE_SUPABASE_URL is required (Supabase project URL)');
+  process.exit(1);
+}
 if (!supabaseServiceKey) {
   console.error('❌ SUPABASE_SERVICE_ROLE_KEY environment variable is required');
-  console.log('🔧 Please run: set SUPABASE_SERVICE_ROLE_KEY=your_service_role_key');
-  console.log('📖 You can find the service role key in your Supabase dashboard under Settings > API');
+  console.log('🔧 Example: set SUPABASE_SERVICE_ROLE_KEY=your_service_role_key');
+  console.log('📖 Find it in Supabase dashboard: Settings → API (service_role — never commit or expose to the client)');
   process.exit(1);
 }
 

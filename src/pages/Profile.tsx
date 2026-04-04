@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ProfilePageSkeleton } from "@/components/ui/page-skeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import {
@@ -408,9 +410,7 @@ const Profile = () => {
   if (loading) {
     return (
       <AppLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-        </div>
+        <ProfilePageSkeleton />
       </AppLayout>
     );
   }
@@ -741,8 +741,10 @@ const Profile = () => {
           </CardHeader>
           <CardContent>
             {achievementsLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              <div className="space-y-3 py-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-24 w-full rounded-xl" shimmer />
+                ))}
               </div>
             ) : achievements.length === 0 ? (
               <div className="text-center py-8">
