@@ -1182,6 +1182,84 @@ export type Database = {
         }
         Relationships: []
       }
+      employer_ads: {
+        Row: {
+          ad_description: string
+          ad_title: string
+          ad_type: string
+          application_url: string | null
+          company_logo_url: string | null
+          company_name: string
+          contact_email: string | null
+          created_at: string | null
+          employer_email: string
+          employer_name: string
+          expires_at: string | null
+          id: string
+          is_paid: boolean | null
+          location: string | null
+          payment_amount: number | null
+          payment_id: string | null
+          salary_range: string | null
+          starts_at: string | null
+          status: string | null
+          target_countries: string[] | null
+          target_skills: string[] | null
+          target_universities: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          ad_description: string
+          ad_title: string
+          ad_type?: string
+          application_url?: string | null
+          company_logo_url?: string | null
+          company_name: string
+          contact_email?: string | null
+          created_at?: string | null
+          employer_email: string
+          employer_name: string
+          expires_at?: string | null
+          id?: string
+          is_paid?: boolean | null
+          location?: string | null
+          payment_amount?: number | null
+          payment_id?: string | null
+          salary_range?: string | null
+          starts_at?: string | null
+          status?: string | null
+          target_countries?: string[] | null
+          target_skills?: string[] | null
+          target_universities?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          ad_description?: string
+          ad_title?: string
+          ad_type?: string
+          application_url?: string | null
+          company_logo_url?: string | null
+          company_name?: string
+          contact_email?: string | null
+          created_at?: string | null
+          employer_email?: string
+          employer_name?: string
+          expires_at?: string | null
+          id?: string
+          is_paid?: boolean | null
+          location?: string | null
+          payment_amount?: number | null
+          payment_id?: string | null
+          salary_range?: string | null
+          starts_at?: string | null
+          status?: string | null
+          target_countries?: string[] | null
+          target_skills?: string[] | null
+          target_universities?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string
@@ -1457,8 +1535,12 @@ export type Database = {
       }
       profiles: {
         Row: {
+          about_me: string | null
           admission_number: string | null
+          availability: string | null
           bio: string | null
+          career_interests: string | null
+          certifications: Json | null
           character_id: string | null
           class_id: string | null
           country_id: string | null
@@ -1469,25 +1551,41 @@ export type Database = {
           follower_count: number | null
           following_count: number | null
           full_name: string
+          github_url: string | null
+          graduation_year: number | null
           id: string
+          industry_preferences: string[] | null
+          languages: string[] | null
           last_login: string | null
+          linkedin_url: string | null
+          location_preference: string | null
+          phone_number: string | null
           points: number
+          portfolio_url: string | null
           privacy_level: string | null
           profile_completed: boolean | null
           profile_picture_url: string | null
           rank: Database["public"]["Enums"]["user_rank"]
           role: Database["public"]["Enums"]["user_role"]
+          salary_expectations: string | null
           semester: string | null
+          skills: string[] | null
+          soft_skills: string[] | null
           student_status: string | null
           university_id: string | null
           updated_at: string
           user_id: string | null
           video_count: number | null
+          work_experience: Json | null
           year: string | null
         }
         Insert: {
+          about_me?: string | null
           admission_number?: string | null
+          availability?: string | null
           bio?: string | null
+          career_interests?: string | null
+          certifications?: Json | null
           character_id?: string | null
           class_id?: string | null
           country_id?: string | null
@@ -1498,25 +1596,41 @@ export type Database = {
           follower_count?: number | null
           following_count?: number | null
           full_name: string
+          github_url?: string | null
+          graduation_year?: number | null
           id?: string
+          industry_preferences?: string[] | null
+          languages?: string[] | null
           last_login?: string | null
+          linkedin_url?: string | null
+          location_preference?: string | null
+          phone_number?: string | null
           points?: number
+          portfolio_url?: string | null
           privacy_level?: string | null
           profile_completed?: boolean | null
           profile_picture_url?: string | null
           rank?: Database["public"]["Enums"]["user_rank"]
           role?: Database["public"]["Enums"]["user_role"]
+          salary_expectations?: string | null
           semester?: string | null
+          skills?: string[] | null
+          soft_skills?: string[] | null
           student_status?: string | null
           university_id?: string | null
           updated_at?: string
           user_id?: string | null
           video_count?: number | null
+          work_experience?: Json | null
           year?: string | null
         }
         Update: {
+          about_me?: string | null
           admission_number?: string | null
+          availability?: string | null
           bio?: string | null
+          career_interests?: string | null
+          certifications?: Json | null
           character_id?: string | null
           class_id?: string | null
           country_id?: string | null
@@ -1527,20 +1641,32 @@ export type Database = {
           follower_count?: number | null
           following_count?: number | null
           full_name?: string
+          github_url?: string | null
+          graduation_year?: number | null
           id?: string
+          industry_preferences?: string[] | null
+          languages?: string[] | null
           last_login?: string | null
+          linkedin_url?: string | null
+          location_preference?: string | null
+          phone_number?: string | null
           points?: number
+          portfolio_url?: string | null
           privacy_level?: string | null
           profile_completed?: boolean | null
           profile_picture_url?: string | null
           rank?: Database["public"]["Enums"]["user_rank"]
           role?: Database["public"]["Enums"]["user_role"]
+          salary_expectations?: string | null
           semester?: string | null
+          skills?: string[] | null
+          soft_skills?: string[] | null
           student_status?: string | null
           university_id?: string | null
           updated_at?: string
           user_id?: string | null
           video_count?: number | null
+          work_experience?: Json | null
           year?: string | null
         }
         Relationships: [
