@@ -43,6 +43,7 @@ const Sifa = lazy(() => import("./pages/Sifa"));
 const Masomo = lazy(() => import("./pages/Masomo"));
 const ClassPage = lazy(() => import("./pages/ClassPage"));
 const Admin = lazy(() => import("./pages/Admin"));
+const Insights = lazy(() => import("./pages/Insights"));
 
 // Loading component (lazy route chunks)
 const PageLoader = () => <AppShellSkeleton />;
@@ -198,6 +199,13 @@ const App = () => {
               <ApplicationStatusGuard>
                 <ProtectedRoute>
                   <UnitPage />
+                </ProtectedRoute>
+              </ApplicationStatusGuard>
+            } />
+            <Route path="/insights" element={
+              <ApplicationStatusGuard>
+                <ProtectedRoute>
+                  <Insights />
                 </ProtectedRoute>
               </ApplicationStatusGuard>
             } />
