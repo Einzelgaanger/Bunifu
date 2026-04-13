@@ -206,6 +206,18 @@ export function Sidebar({ profile }: SidebarProps) {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild>
                     <NavLink 
+                      to="/insights" 
+                      className={getNavLinkClass}
+                      onClick={() => handleNavClick("/insights")}
+                    >
+                      <Brain className="h-4 w-4" />
+                      <span>Maarifa</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
                       to="/inbox" 
                       className={getNavLinkClass}
                       onClick={() => handleNavClick("/inbox")}
