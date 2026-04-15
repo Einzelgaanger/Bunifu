@@ -540,7 +540,62 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Employer CTA Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-orange-500 to-amber-500">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+            <div className="flex-1 text-center lg:text-left">
+              <Badge className="bg-white/20 text-white border-white/30 mb-4">
+                <Briefcase className="h-3 w-3 mr-1" /> For Employers & Recruiters
+              </Badge>
+              <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4 fredoka-bold">
+                Find Top Talent with AI
+              </h2>
+              <p className="text-lg text-orange-100 mb-6 fredoka-medium max-w-xl">
+                Search thousands of student profiles using natural language. Our AI matches candidates based on skills, achievements, and career goals.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Link to="/login">
+                  <Button size="lg" className="bg-white text-orange-600 hover:bg-orange-50 px-8 py-4 text-lg fredoka-semibold shadow-lg w-full sm:w-auto">
+                    Post a Job <ArrowRight className="h-5 w-5 ml-2" />
+                  </Button>
+                </Link>
+                <Link to="/login">
+                  <Button size="lg" variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8 py-4 text-lg fredoka-semibold w-full sm:w-auto">
+                    Search Talent
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            <div className="flex-shrink-0">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                  <Users className="h-8 w-8 text-white mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white fredoka-bold">10K+</div>
+                  <div className="text-sm text-orange-100 fredoka-medium">Student Profiles</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                  <Award className="h-8 w-8 text-white mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white fredoka-bold">AI</div>
+                  <div className="text-sm text-orange-100 fredoka-medium">Smart Matching</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                  <Globe className="h-8 w-8 text-white mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white fredoka-bold">500+</div>
+                  <div className="text-sm text-orange-100 fredoka-medium">Universities</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-4">
+                  <Target className="h-8 w-8 text-white mx-auto mb-2" />
+                  <div className="text-2xl font-bold text-white fredoka-bold">Free</div>
+                  <div className="text-sm text-orange-100 fredoka-medium">To Get Started</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Student CTA Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 sm:mb-6 fredoka-bold">
