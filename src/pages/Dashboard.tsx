@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { WelcomeSection } from "@/components/dashboard/WelcomeSection";
 import { WallOfFameSection } from "@/components/dashboard/WallOfFameSection";
 import { UpcomingSection } from "@/components/dashboard/UpcomingSection";
+import { DashboardInsights } from "@/components/dashboard/DashboardInsights";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { ProgressiveReveal } from "@/components/ui/ProgressiveReveal";
@@ -62,9 +63,12 @@ const Dashboard = () => {
           <WelcomeSection />
         </ProgressiveReveal>
         <ProgressiveReveal staggerIndex={1}>
-          <WallOfFameSection />
+          <DashboardInsights />
         </ProgressiveReveal>
         <ProgressiveReveal staggerIndex={2}>
+          <WallOfFameSection />
+        </ProgressiveReveal>
+        <ProgressiveReveal staggerIndex={3}>
           <UpcomingSection />
         </ProgressiveReveal>
       </div>
