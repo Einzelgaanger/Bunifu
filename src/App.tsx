@@ -25,6 +25,8 @@ import NotFound from "./pages/NotFound";
 
 // Lazy load non-critical pages
 const MyLogin = lazy(() => import("./pages/MyLogin"));
+const RolePicker = lazy(() => import("./pages/RolePicker"));
+const EmployerPortal = lazy(() => import("./pages/EmployerPortal"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const ApplicationForm = lazy(() => import("./pages/ApplicationForm"));
@@ -107,6 +109,16 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/mylogin" element={<MyLogin />} />
+            <Route path="/role-picker" element={
+              <ProtectedRoute>
+                <RolePicker />
+              </ProtectedRoute>
+            } />
+            <Route path="/employer-portal" element={
+              <ProtectedRoute>
+                <EmployerPortal />
+              </ProtectedRoute>
+            } />
             <Route path="/dashboard" element={
               <ApplicationStatusGuard>
                 <ProtectedRoute>
