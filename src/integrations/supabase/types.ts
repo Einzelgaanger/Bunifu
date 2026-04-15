@@ -210,6 +210,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_matches: {
+        Row: {
+          context_data: Json | null
+          created_at: string | null
+          id: string
+          match_reason: string | null
+          match_score: number | null
+          match_type: string
+          matched_user_id: string
+          requester_id: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          context_data?: Json | null
+          created_at?: string | null
+          id?: string
+          match_reason?: string | null
+          match_score?: number | null
+          match_type?: string
+          matched_user_id: string
+          requester_id: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          context_data?: Json | null
+          created_at?: string | null
+          id?: string
+          match_reason?: string | null
+          match_score?: number | null
+          match_type?: string
+          matched_user_id?: string
+          requester_id?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       alumni_event_attendees: {
         Row: {
           created_at: string
@@ -1543,10 +1582,15 @@ export type Database = {
           certifications: Json | null
           character_id: string | null
           class_id: string | null
+          company_name: string | null
+          company_role: string | null
+          company_website: string | null
           country_id: string | null
           course_id: string | null
           created_at: string
           created_from_application: boolean | null
+          cv_file_path: string | null
+          cv_url: string | null
           email: string
           follower_count: number | null
           following_count: number | null
@@ -1588,10 +1632,15 @@ export type Database = {
           certifications?: Json | null
           character_id?: string | null
           class_id?: string | null
+          company_name?: string | null
+          company_role?: string | null
+          company_website?: string | null
           country_id?: string | null
           course_id?: string | null
           created_at?: string
           created_from_application?: boolean | null
+          cv_file_path?: string | null
+          cv_url?: string | null
           email: string
           follower_count?: number | null
           following_count?: number | null
@@ -1633,10 +1682,15 @@ export type Database = {
           certifications?: Json | null
           character_id?: string | null
           class_id?: string | null
+          company_name?: string | null
+          company_role?: string | null
+          company_website?: string | null
           country_id?: string | null
           course_id?: string | null
           created_at?: string
           created_from_application?: boolean | null
+          cv_file_path?: string | null
+          cv_url?: string | null
           email?: string
           follower_count?: number | null
           following_count?: number | null
@@ -2833,7 +2887,7 @@ export type Database = {
     }
     Enums: {
       user_rank: "bronze" | "silver" | "gold" | "platinum" | "diamond"
-      user_role: "student" | "lecturer" | "admin" | "super_admin"
+      user_role: "student" | "lecturer" | "admin" | "super_admin" | "employer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2962,7 +3016,7 @@ export const Constants = {
   public: {
     Enums: {
       user_rank: ["bronze", "silver", "gold", "platinum", "diamond"],
-      user_role: ["student", "lecturer", "admin", "super_admin"],
+      user_role: ["student", "lecturer", "admin", "super_admin", "employer"],
     },
   },
 } as const

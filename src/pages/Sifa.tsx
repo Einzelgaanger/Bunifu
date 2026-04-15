@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { AchievementPost } from "@/components/achievements/AchievementPost";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateAchievementForm } from "@/components/achievements/CreateAchievementForm";
+import { CollabMatches } from "@/components/sifa/CollabMatches";
 import {
   Dialog,
   DialogContent,
@@ -406,6 +407,9 @@ export default function Sifa() {
             </div>
           </CardContent>
         </Card>
+
+        {/* AI Collaboration Matches */}
+        <CollabMatches />
 
         {/* Achievements Feed */}
         <div className="space-y-6">
