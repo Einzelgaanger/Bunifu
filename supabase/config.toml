@@ -2,3 +2,9 @@ project_id = "ztxgmqunqsookgpmluyp"
 
 [functions.student-insights]
 verify_jwt = false
+
+[functions.ai-talent-search]
+verify_jwt = false
+
+[functions.ai-collab-match]
+verify_jwt = false
