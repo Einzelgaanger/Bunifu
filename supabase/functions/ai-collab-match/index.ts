@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -21,7 +22,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get the requesting user's profile
@@ -41,25 +42,29 @@ serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(5);
 
-    // Get other students' profiles (excluding self)
+    // Get other students' profiles (excluding self), preferring same university first
     const { data: otherProfiles } = await supabase
       .from("profiles")
-      .select("user_id, full_name, skills, soft_skills, career_interests, industry_preferences, bio, university_id, course_id, year, profile_picture_url, universities(name), courses(name)")
+      .select("user_id, full_name, skills, soft_skills, career_interests, industry_preferences, bio, university_id, course_id, year, profile_picture_url, universities!fk_profiles_university(name), courses!fk_profiles_course(name)")
       .neq("user_id", user_id)
       .in("role", ["student", "lecturer"])
       .limit(150);
 
     // Get other users' achievements
     const otherUserIds = (otherProfiles || []).map((p: any) => p.user_id);
-    const { data: otherAchievements } = await supabase
-      .from("achievements")
-      .select("user_id, title, description")
-      .in("user_id", otherUserIds)
-      .order("created_at", { ascending: false })
-      .limit(500);
+    let otherAchievements: any[] = [];
+    if (otherUserIds.length > 0) {
+      const { data } = await supabase
+        .from("achievements")
+        .select("user_id, title, description")
+        .in("user_id", otherUserIds)
+        .order("created_at", { ascending: false })
+        .limit(500);
+      otherAchievements = data || [];
+    }
 
     const achievementsByUser: Record<string, string[]> = {};
-    (otherAchievements || []).forEach((a: any) => {
+    otherAchievements.forEach((a: any) => {
       if (!achievementsByUser[a.user_id]) achievementsByUser[a.user_id] = [];
       if (achievementsByUser[a.user_id].length < 3) {
         achievementsByUser[a.user_id].push(a.title);
@@ -72,6 +77,12 @@ serve(async (req) => {
       return `[${i}] ${p.full_name} | ${p.universities?.name || 'N/A'} | ${p.courses?.name || 'N/A'} | Skills: ${(p.skills || []).join(', ') || 'None'} | Interests: ${p.career_interests || 'N/A'} | Sifa: ${(achievementsByUser[p.user_id] || []).join(', ') || 'None'}`;
     }).join('\n');
 
+    if (!otherSummaries) {
+      return new Response(JSON.stringify({ matches: [] }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -79,7 +90,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
@@ -87,7 +98,7 @@ serve(async (req) => {
 
 Consider complementary skills (not just same skills), shared interests, achievement synergy, and potential for impactful collaboration.
 
-Return a JSON array of up to 8 best collaboration matches with:
+Return a JSON object with a "matches" array of up to 8 best collaboration matches. Each match has:
 - "index": candidate index
 - "score": compatibility 0-100
 - "reason": why they'd collaborate well (1-2 sentences)
@@ -98,33 +109,7 @@ Return a JSON array of up to 8 best collaboration matches with:
             content: `Find collaboration matches for this student:\n${mySummary}\n\nPotential collaborators:\n${otherSummaries}`,
           },
         ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "return_collab_matches",
-            description: "Return collaboration matches",
-            parameters: {
-              type: "object",
-              properties: {
-                matches: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      index: { type: "number" },
-                      score: { type: "number" },
-                      reason: { type: "string" },
-                      project_idea: { type: "string" },
-                    },
-                    required: ["index", "score", "reason", "project_idea"],
-                  },
-                },
-              },
-              required: ["matches"],
-            },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "return_collab_matches" } },
+        response_format: { type: "json_object" },
       }),
     });
 
@@ -140,16 +125,25 @@ Return a JSON array of up to 8 best collaboration matches with:
 
     const aiData = await aiResponse.json();
     let matchResults: any[] = [];
+
+    // Handle both tool_calls and plain JSON response
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
       matchResults = JSON.parse(toolCall.function.arguments).matches || [];
+    } else {
+      const content = aiData.choices?.[0]?.message?.content;
+      if (content) {
+        try {
+          matchResults = JSON.parse(content).matches || [];
+        } catch { /* ignore */ }
+      }
     }
 
     const matches = matchResults
       .filter((m: any) => m.index >= 0 && m.index < (otherProfiles || []).length)
       .sort((a: any, b: any) => b.score - a.score)
       .map((m: any) => {
-        const p = otherProfiles![m.index];
+        const p = (otherProfiles as any[])[m.index];
         return {
           user_id: p.user_id,
           full_name: p.full_name,
@@ -166,7 +160,7 @@ Return a JSON array of up to 8 best collaboration matches with:
     return new Response(JSON.stringify({ matches }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Collab match error:", error);
     return new Response(JSON.stringify({ error: error.message || "Matching failed" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -21,7 +22,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Fetch student profiles with rich data
@@ -33,8 +34,8 @@ serve(async (req) => {
         profile_picture_url, portfolio_url, linkedin_url, github_url,
         graduation_year, work_experience, certifications,
         university_id, course_id, year, semester,
-        universities(name),
-        courses(name)
+        universities!fk_profiles_university(name),
+        courses!fk_profiles_course(name)
       `)
       .in("role", ["student", "lecturer"])
       .not("full_name", "is", null)
@@ -74,51 +75,25 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o-mini",
         messages: [
           {
             role: "system",
             content: `You are a talent matching AI for Bunifu, an African university platform. An employer is searching for candidates. Analyze the candidate profiles and their Sifa (achievement) posts to find the best matches.
 
-Return a JSON array of up to 10 best matches. For each match include:
+Return a JSON object with a "matches" array of up to 10 best matches. For each match include:
 - "index": the candidate index number from the list
 - "score": match percentage 0-100
 - "reason": 1-2 sentence explanation of why they're a good match
 
-Consider: skills match, relevant achievements, university quality, career interests alignment, language fit, and overall profile strength.
-Only return the JSON array, no other text.`,
+Consider: skills match, relevant achievements, university quality, career interests alignment, language fit, and overall profile strength.`,
           },
           {
             role: "user",
             content: `Employer search: "${query}"\n\nCandidate profiles:\n${candidateSummaries}`,
           },
         ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "return_matches",
-            description: "Return matched candidates",
-            parameters: {
-              type: "object",
-              properties: {
-                matches: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      index: { type: "number" },
-                      score: { type: "number" },
-                      reason: { type: "string" },
-                    },
-                    required: ["index", "score", "reason"],
-                  },
-                },
-              },
-              required: ["matches"],
-            },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "return_matches" } },
+        response_format: { type: "json_object" },
       }),
     });
 
@@ -139,11 +114,19 @@ Only return the JSON array, no other text.`,
     const aiData = await aiResponse.json();
     let matchResults: any[] = [];
 
-    // Parse tool call response
+    // Parse response - handle both tool call and JSON response
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
       const parsed = JSON.parse(toolCall.function.arguments);
       matchResults = parsed.matches || [];
+    } else {
+      const content = aiData.choices?.[0]?.message?.content;
+      if (content) {
+        try {
+          const parsed = JSON.parse(content);
+          matchResults = parsed.matches || [];
+        } catch { /* ignore parse error */ }
+      }
     }
 
     // Map back to full profile data
@@ -151,7 +134,7 @@ Only return the JSON array, no other text.`,
       .filter((m: any) => m.index >= 0 && m.index < (profiles || []).length)
       .sort((a: any, b: any) => b.score - a.score)
       .map((m: any) => {
-        const p = profiles![m.index];
+        const p = (profiles as any[])[m.index];
         return {
           user_id: p.user_id,
           full_name: p.full_name,
@@ -169,7 +152,7 @@ Only return the JSON array, no other text.`,
     return new Response(JSON.stringify({ matches }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Talent search error:", error);
     return new Response(JSON.stringify({ error: error.message || "Search failed" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },

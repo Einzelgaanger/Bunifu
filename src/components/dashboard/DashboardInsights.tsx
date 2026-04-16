@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Brain, TrendingUp, Sparkles, Calendar, Users, Loader2, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 
 interface Insight {
   type: "career" | "event" | "trend" | "network" | "tip";
@@ -18,6 +19,7 @@ interface Insight {
 export function DashboardInsights() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
@@ -26,31 +28,43 @@ export function DashboardInsights() {
     if (!user) return;
     setLoading(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
       const { data, error } = await supabase.functions.invoke("student-insights", {
-        body: { user_id: user.id },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (error) throw error;
       
-      // Parse the AI response into structured insights
-      const raw = data?.insights || data?.analysis || "";
-      if (typeof raw === "string" && raw.length > 0) {
-        // Simple parsing - split into sections
-        const sections = raw.split(/\n(?=##|\*\*|🎯|📅|📈|💡|🤝)/);
-        const parsed: Insight[] = sections
-          .filter((s: string) => s.trim().length > 20)
-          .slice(0, 5)
-          .map((s: string, i: number) => ({
-            type: i === 0 ? "career" : i === 1 ? "trend" : i === 2 ? "event" : i === 3 ? "network" : "tip",
-            title: s.split("\n")[0]?.replace(/[#*🎯📅📈💡🤝]/g, "").trim().slice(0, 60) || "Insight",
-            description: s.split("\n").slice(1).join(" ").trim().slice(0, 200),
-            relevance: "Based on your profile",
-          }));
-        setInsights(parsed.length > 0 ? parsed : [{ type: "tip", title: "Complete your profile", description: "Add skills, achievements, and career interests to get personalized insights.", relevance: "Getting started" }]);
+      // If we get structured insights (from the JSON response)
+      if (data?.top_insights && Array.isArray(data.top_insights)) {
+        const parsed: Insight[] = data.top_insights.slice(0, 5).map((insight: any, i: number) => ({
+          type: insight.category === "career" ? "career" : 
+                insight.category === "academic" ? "trend" :
+                insight.category === "network" ? "network" :
+                insight.category === "opportunity" ? "event" : "tip",
+          title: insight.title,
+          description: insight.description,
+          relevance: insight.action || "Based on your profile",
+        }));
+        setInsights(parsed);
+      } else {
+        setInsights([{ 
+          type: "tip", 
+          title: "Complete your profile", 
+          description: "Add skills, achievements, and career interests to get personalized insights.", 
+          relevance: "Getting started" 
+        }]);
       }
       setHasLoaded(true);
     } catch (error) {
       console.error("Insights error:", error);
-      setInsights([{ type: "tip", title: "AI Insights Coming Soon", description: "We're preparing personalized insights based on your profile and activity. Check back shortly!", relevance: "" }]);
+      setInsights([{ 
+        type: "tip", 
+        title: "AI Insights Available", 
+        description: "Visit the Maarifa page for detailed career and academic insights powered by AI.", 
+        relevance: "" 
+      }]);
       setHasLoaded(true);
     } finally {
       setLoading(false);
@@ -89,9 +103,14 @@ export function DashboardInsights() {
             <Brain className="h-5 w-5 text-primary" />
             AI Insights for You
           </CardTitle>
-          <Button variant="ghost" size="sm" onClick={fetchInsights} disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={fetchInsights} disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate("/insights")}>
+              View All
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
