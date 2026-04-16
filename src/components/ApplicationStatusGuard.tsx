@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useApplicationStatus } from '@/hooks/useApplicationStatus';
 import { useToast } from '@/hooks/use-toast';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ApplicationStatusGuardProps {
   children: React.ReactNode;
@@ -15,13 +16,32 @@ const ApplicationStatusGuard = ({ children }: ApplicationStatusGuardProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const [checkingStatus, setCheckingStatus] = useState(false);
   const lastCheckRef = useRef<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isNavigatingRef = useRef<boolean>(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [roleLoading, setRoleLoading] = useState(true);
+
+  // Fetch user role once
+  useEffect(() => {
+    if (!user) {
+      setUserRole(null);
+      setRoleLoading(false);
+      return;
+    }
+    const fetchRole = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+      setUserRole(data?.role || null);
+      setRoleLoading(false);
+    };
+    fetchRole();
+  }, [user]);
 
   useEffect(() => {
-    // If user is null (logged out), don't check application status and clear any stale state
     if (!user) {
       lastCheckRef.current = null;
       isNavigatingRef.current = false;
@@ -32,101 +52,76 @@ const ApplicationStatusGuard = ({ children }: ApplicationStatusGuardProps) => {
       return;
     }
 
-    // Don't check if auth or status is still loading
-    if (authLoading || statusLoading) return;
+    if (authLoading || statusLoading || roleLoading) return;
 
-    // Additional check: don't proceed if we don't have complete status data
+    // Employers bypass application check entirely
+    if (userRole === 'employer') return;
+
     if (status === undefined || status === null) return;
 
-    // Don't redirect if already on the correct status pages
     const currentPath = location.pathname;
     if (currentPath === '/application-status' || 
         currentPath === '/application-rejected' || 
         currentPath === '/login' || 
-        currentPath === '/application') {
+        currentPath === '/application' ||
+        currentPath === '/role-picker' ||
+        currentPath === '/employer-portal') {
       return;
     }
 
-    // Don't check if we just checked this path (prevent rapid-fire checks)
     if (lastCheckRef.current === currentPath) return;
     lastCheckRef.current = currentPath;
 
-    // Clear any existing timeout
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
 
-    // Add a small delay to prevent flash during initial load
     timeoutRef.current = setTimeout(() => {
-      // Prevent multiple navigation calls
       if (isNavigatingRef.current) return;
       
       if (status === 'approved') {
-        // User is approved and has a class assigned
-        // Only redirect to dashboard if they're on an invalid page (not on any main app page)
         const validPaths = [
           '/dashboard', '/ukumbi', '/events', '/ajira', '/inbox', '/alumni', 
-          '/profile', '/info', '/units', '/unit'
+          '/profile', '/info', '/units', '/unit', '/sifa', '/masomo',
+          '/class', '/insights', '/gamification'
         ];
-        
-        // Check if current path is a valid main app page or a sub-page
         const isValidPath = validPaths.some(path => currentPath.startsWith(path));
-        
         if (!isValidPath && currentPath !== '/') {
-          // Only redirect if they're on an invalid page
           isNavigatingRef.current = true;
           navigate('/dashboard');
         }
       } else if (status === 'pending') {
-        // Application is pending - redirect to status page
         isNavigatingRef.current = true;
         navigate('/application-status');
       } else if (status === 'rejected') {
-        // Check if rejection cooldown is active
         const rejectionData = localStorage.getItem(`rejection_${user.id}`);
         let shouldRedirectToRejected = false;
-
         if (rejectionData) {
           const { rejectedAt } = JSON.parse(rejectionData);
-          const rejectionTime = new Date(rejectedAt);
-          const now = new Date();
-          const timeDiff = now.getTime() - rejectionTime.getTime();
-          const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
-          
-          // If less than 7 days have passed, redirect to rejected page
-          if (daysDiff < 7) {
-            shouldRedirectToRejected = true;
-          }
+          const timeDiff = Date.now() - new Date(rejectedAt).getTime();
+          if (timeDiff < 7 * 24 * 3600 * 1000) shouldRedirectToRejected = true;
         } else {
-          // If no rejection data in localStorage, create it
-          localStorage.setItem(`rejection_${user.id}`, JSON.stringify({
-            rejectedAt: new Date().toISOString()
-          }));
+          localStorage.setItem(`rejection_${user.id}`, JSON.stringify({ rejectedAt: new Date().toISOString() }));
           shouldRedirectToRejected = true;
         }
-
         if (shouldRedirectToRejected) {
           isNavigatingRef.current = true;
           navigate('/application-rejected');
         }
       } else if (!hasApplication) {
-        // No application - allow user to stay on dashboard and fill out profile later
-        // Only redirect to application if they're on an invalid page
         const validPaths = [
           '/dashboard', '/ukumbi', '/events', '/ajira', '/inbox', '/alumni', 
-          '/profile', '/info', '/units', '/unit', '/application'
+          '/profile', '/info', '/units', '/unit', '/application', '/sifa',
+          '/masomo', '/class', '/insights', '/gamification'
         ];
-        
         const isValidPath = validPaths.some(path => currentPath.startsWith(path));
-        
         if (!isValidPath && currentPath !== '/') {
-          // Only redirect if they're on an invalid page
           isNavigatingRef.current = true;
           navigate('/dashboard');
         }
       }
-    }, 100); // Small delay to prevent flash
+    }, 100);
 
     return () => {
       if (timeoutRef.current) {
@@ -135,21 +130,18 @@ const ApplicationStatusGuard = ({ children }: ApplicationStatusGuardProps) => {
       }
       isNavigatingRef.current = false;
     };
-  }, [user, authLoading, statusLoading, status, hasApplication, location.pathname, navigate]);
+  }, [user, authLoading, statusLoading, roleLoading, userRole, status, hasApplication, location.pathname, navigate]);
 
-  // Handle navigation to login when no user
   useEffect(() => {
     if (!authLoading && !statusLoading && !user) {
       navigate('/login', { replace: true });
     }
   }, [user, authLoading, statusLoading, navigate]);
 
-  // Show loading while checking application status
-  if (authLoading || statusLoading) {
+  if (authLoading || statusLoading || roleLoading) {
     return <LoadingSpinner message="Checking application status..." variant="fullscreen" />;
   }
 
-  // If no user after auth is loaded, show loading while redirecting
   if (!user) {
     return <LoadingSpinner message="Redirecting to login..." variant="fullscreen" />;
   }
